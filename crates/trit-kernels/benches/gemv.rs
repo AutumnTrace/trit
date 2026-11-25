@@ -193,7 +193,10 @@ fn run_stack(
         let mut yf = vec![0f32; d];
         return time(|| stack.pass(isa, &act, &xf, 0, d, &mut y, &mut yf));
     }
-    // Persistent workers: spawning threads per pass would dominate small stacks.
+    // Persistent workers: spawning threads per pass would dominate small
+    // stacks. Waking them still costs tens of microseconds, so each wake-up
+    // runs enough passes to cover at least 64 MB of weights.
+    let reps = ((64usize << 20) / stack.bytes()).max(1);
     let start = Arc::new(Barrier::new(threads + 1));
     let done = Arc::new(Barrier::new(threads + 1));
     let stop = Arc::new(std::sync::atomic::AtomicBool::new(false));
@@ -211,7 +214,9 @@ fn run_stack(
                     if stop.load(std::sync::atomic::Ordering::Relaxed) {
                         return;
                     }
-                    stack.pass(isa, &act, &xf, r0, r1, &mut y, &mut yf);
+                    for _ in 0..reps {
+                        stack.pass(isa, &act, &xf, r0, r1, &mut y, &mut yf);
+                    }
                     done.wait();
                 }
             })
@@ -220,7 +225,7 @@ fn run_stack(
     let secs = time(|| {
         start.wait();
         done.wait();
-    });
+    }) / reps as f64;
     stop.store(true, std::sync::atomic::Ordering::Relaxed);
     start.wait();
     handles.into_iter().for_each(|h| h.join().unwrap());
@@ -299,8 +304,13 @@ fn main() {
         fixed_shapes(&mut rows);
     }
     if let Some(path) = json {
+        // cargo runs benchmarks from the crate directory; resolve relative
+        // paths against the workspace root instead.
+        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("../..")
+            .join(path);
         let body: Vec<String> = rows.iter().map(Row::json).collect();
         std::fs::write(&path, format!("[\n{}\n]\n", body.join(",\n"))).expect("write json");
-        println!("wrote {path}");
+        println!("wrote {}", path.display());
     }
 }
