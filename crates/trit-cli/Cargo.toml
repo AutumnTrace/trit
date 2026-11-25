@@ -1,0 +1,16 @@
+[package]
+name = "trit-cli"
+description = "Command-line generation and benchmarks for trit"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "trit"
+path = "src/main.rs"
+
+[dependencies]
+trit-kernels.workspace = true
+trit-model.workspace = true
