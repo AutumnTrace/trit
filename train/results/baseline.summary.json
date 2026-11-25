@@ -1,0 +1,28 @@
+{
+  "config": {
+    "vocab_size": 4096,
+    "dim": 384,
+    "n_layers": 8,
+    "n_heads": 6,
+    "ffn_dim": 1536,
+    "max_seq_len": 512,
+    "rope_theta": 10000.0,
+    "norm_eps": 1e-05,
+    "ternary": false
+  },
+  "params": {
+    "linear": 14155776,
+    "embedding": 1572864,
+    "norm": 21888
+  },
+  "steps": 20000,
+  "batch": 32,
+  "seq": 512,
+  "tokens": 327680000,
+  "lr": 0.001,
+  "wd": 0.1,
+  "train_seconds": 1590.6,
+  "final_val_loss": 1.2284,
+  "gpu": "NVIDIA GeForce RTX 5070",
+  "torch": "2.15.0+cu132"
+}

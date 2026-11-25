@@ -1,0 +1,8 @@
+[
+{"layout":"i2","kernel":"scalar","tokens":886,"seconds":1.3800,"tok_per_s":642.0},
+{"layout":"i2","kernel":"avx2","tokens":886,"seconds":0.3870,"tok_per_s":2289.3},
+{"layout":"i2","kernel":"avx512-vnni","tokens":886,"seconds":0.3770,"tok_per_s":2350.2},
+{"layout":"tq","kernel":"scalar","tokens":886,"seconds":3.2708,"tok_per_s":270.9},
+{"layout":"tq","kernel":"avx2","tokens":886,"seconds":0.6000,"tok_per_s":1476.6},
+{"layout":"tq","kernel":"avx512-vnni","tokens":886,"seconds":0.4959,"tok_per_s":1786.7}
+]

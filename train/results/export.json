@@ -1,0 +1,8 @@
+{
+  "model": "models/tinystories-15m.trit",
+  "val_loss": 1.3411,
+  "val_tokens": 655360,
+  "ffn_zero_fraction": 0.9042,
+  "fixtures": "crates/trit-model/tests/fixtures",
+  "command": "uv run python -m trit_train.reference --model ../models/tinystories-15m.trit --fixtures ../crates/trit-model/tests/fixtures"
+}

@@ -1,0 +1,90 @@
+{
+  "by_matrix": {
+    "wq": {
+      "-": 0.3113,
+      "0": 0.3772,
+      "+": 0.3116
+    },
+    "wk": {
+      "-": 0.3089,
+      "0": 0.3824,
+      "+": 0.3087
+    },
+    "wv": {
+      "-": 0.3205,
+      "0": 0.3591,
+      "+": 0.3204
+    },
+    "wo": {
+      "-": 0.3282,
+      "0": 0.3423,
+      "+": 0.3294
+    },
+    "w_up": {
+      "-": 0.3159,
+      "0": 0.3633,
+      "+": 0.3208
+    },
+    "w_down": {
+      "-": 0.3151,
+      "0": 0.3701,
+      "+": 0.3148
+    }
+  },
+  "dead_ffn_units": [
+    {
+      "layer": 0,
+      "w_up_rows_all_zero": 0,
+      "w_down_columns_all_zero": 0,
+      "both": 0
+    },
+    {
+      "layer": 1,
+      "w_up_rows_all_zero": 34,
+      "w_down_columns_all_zero": 36,
+      "both": 34
+    },
+    {
+      "layer": 2,
+      "w_up_rows_all_zero": 98,
+      "w_down_columns_all_zero": 101,
+      "both": 98
+    },
+    {
+      "layer": 3,
+      "w_up_rows_all_zero": 162,
+      "w_down_columns_all_zero": 167,
+      "both": 161
+    },
+    {
+      "layer": 4,
+      "w_up_rows_all_zero": 80,
+      "w_down_columns_all_zero": 85,
+      "both": 80
+    },
+    {
+      "layer": 5,
+      "w_up_rows_all_zero": 21,
+      "w_down_columns_all_zero": 22,
+      "both": 21
+    },
+    {
+      "layer": 6,
+      "w_up_rows_all_zero": 1,
+      "w_down_columns_all_zero": 2,
+      "both": 1
+    },
+    {
+      "layer": 7,
+      "w_up_rows_all_zero": 0,
+      "w_down_columns_all_zero": 0,
+      "both": 0
+    }
+  ],
+  "ffn_units_per_layer": 1536,
+  "all": {
+    "-": 0.3161,
+    "0": 0.3662,
+    "+": 0.3177
+  }
+}
