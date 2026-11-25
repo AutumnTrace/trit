@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/trit-kernels", "crates/trit-model", "crates/trit-cli"]
+members = ["crates/trit-kernels", "crates/trit-model", "crates/trit-cli", "crates/trit-wasm"]
 
 [workspace.package]
 version = "0.1.0"

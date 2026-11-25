@@ -1,0 +1,29 @@
+{
+  "command": "node scripts/cli-stories.ts",
+  "stories": [
+    {
+      "prompt": "Once upon a time",
+      "seed": 1,
+      "temperature": 0.8,
+      "topP": 0.9,
+      "maxTokens": 200,
+      "text": "Once upon a time, there was a little girl named Sue. Sue loved to play with her toys. One day, she found a big box. Inside the box, there was a surprise. Sue was very excited.\nSue wanted to make a toy car with her new gear. She put the gear in a bag and went outside. Sue played with her gear all day long. She made the gear go fast and slow. It went round and round. Sue was so happy with her new toy.\nBut then, something unexpected happened. Sue's gear went far away. It went into a deep hole. Sue was sad and scared. She did not know what to do. Then, she saw a big, friendly dog. The dog had the gear in its mouth! The dog gave the gear back to Sue. Sue was so happy and played with her new dog friend all day."
+    },
+    {
+      "prompt": "The dragon was sad because",
+      "seed": 2,
+      "temperature": 1,
+      "topP": 0.95,
+      "maxTokens": 200,
+      "text": "The dragon was sad because he couldn't stay in the park. He looked around and he saw some children playing in the park. He felt lonely again, but he was still shy.\nThe next day, the boy came up with an idea. He tried to find the dragon. He held the dragon in his hands and climbed onto a tree. The dragon was still lonely, but he let out a big yawn. He was so happy that he screamed for the singer!\nThe dragon was so loud that he wanted to hide behind the tree. So he shouted for the little boy to look. The tree was big and strong and was so tall that the dragon couldn't scare it.\nThe dragon said that he would use his hand and help him find a better place to hide. The boy was not sad anymore, and when he saw the dragon, he knew it would help him sooner. So, they both went to the tree together and the dragon showed the boy the way out of the park."
+    },
+    {
+      "prompt": "Tom and his dog Max went to the beach.",
+      "seed": 3,
+      "temperature": 0.6,
+      "topP": 0.8,
+      "maxTokens": 200,
+      "text": "Tom and his dog Max went to the beach. They liked to play in the sand and splash in the water. They saw a big boat on the water. It was a yacht. It had many colors and shapes.\n\"Look, Max, a yacht!\" Tom said. He pointed to a white white thing on the water. \"Let's go on it!\"\n\"OK, Tom, but be careful. The yacht is very fast and fast,\" Max said. He ran to the yacht and pushed a button. The yacht made a loud noise.\n\"Wow, Max, it's so pretty!\" Tom said. He wanted to touch the yacht. He reached out his hand to touch it. But Max did not see a rock on the ground. He stumbled on the rock and fell on the sand.\n\"Ow, ow, ow!\" Tom cried. He ran to his mom and showed her his hand.\n\"Are you okay, Tom?\" his mom asked. She hugged him and kissed his cheek.\n\""
+    }
+  ]
+}

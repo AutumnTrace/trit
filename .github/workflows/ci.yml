@@ -28,9 +28,10 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo fmt --all --check
       - run: cargo clippy --workspace --all-targets -- -D warnings
-      - run: cargo clippy -p trit-kernels -p trit-model --target wasm32-unknown-unknown -- -D warnings
+      - run: cargo clippy -p trit-kernels -p trit-model -p trit-wasm --target wasm32-unknown-unknown -- -D warnings
       # Release mode: the parity test runs the real model.
       - run: cargo test --workspace --release
+      - run: cargo build -p trit-wasm --target wasm32-unknown-unknown --release
 
   python:
     name: Python (ruff, CPU smoke tests)
@@ -48,3 +49,26 @@ jobs:
       - run: uv run ruff check .
       - run: uv run ruff format --check .
       - run: uv run pytest -q
+
+  web:
+    name: Web (typecheck, build, end-to-end)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v7
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: npm ci
+      - run: npm run wasm
+      - run: npm run typecheck
+      # Drives the runner's preinstalled Google Chrome (channel: 'chrome').
+      - run: npx playwright test

@@ -1,0 +1,16 @@
+[package]
+name = "trit-wasm"
+description = "WebAssembly build of trit with a small C-ABI surface"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+publish = false
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+trit-kernels.workspace = true
+trit-model.workspace = true

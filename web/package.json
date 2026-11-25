@@ -1,0 +1,31 @@
+{
+  "name": "trit-web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A 1.58-bit TinyStories model running in the browser on WebAssembly SIMD.",
+  "license": "MIT",
+  "author": "Mina Rotari",
+  "type": "module",
+  "scripts": {
+    "wasm": "cargo build -p trit-wasm --target wasm32-unknown-unknown --release && node scripts/assets.ts",
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test:e2e": "playwright test",
+    "bench": "node scripts/bench.ts",
+    "capture": "node scripts/capture.ts"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.65.1",
+    "@types/node": "^24.19.2",
+    "@types/pngjs": "^6.0.5",
+    "gifenc": "^1.0.3",
+    "pngjs": "^7.0.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.8"
+  },
+  "engines": {
+    "node": ">=24"
+  }
+}
