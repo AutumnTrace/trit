@@ -1,0 +1,48 @@
+[project]
+name = "trit-train"
+version = "0.1.0"
+description = "Train and export a ternary (1.58-bit) TinyStories model for trit"
+requires-python = ">=3.12,<3.13"
+license = "MIT"
+dependencies = [
+    "numpy>=2.3",
+    "tokenizers>=0.22",
+    "torch>=2.15",
+    "triton-windows>=3.9; sys_platform == 'win32'",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9",
+    "ruff>=0.14",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cu132", marker = "sys_platform == 'win32'" },
+    { index = "pytorch-cpu", marker = "sys_platform != 'win32'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cu132"
+url = "https://download.pytorch.org/whl/cu132"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "NPY"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

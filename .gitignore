@@ -1,0 +1,4 @@
+/target/
+*.trit
+!/models/*.trit
+.DS_Store

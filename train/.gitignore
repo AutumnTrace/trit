@@ -1,0 +1,8 @@
+data/
+out/
+runs/
+__pycache__/
+.venv/
+.pytest_cache/
+.ruff_cache/
+runs-all.log
