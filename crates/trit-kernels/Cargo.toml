@@ -1,0 +1,15 @@
+[package]
+name = "trit-kernels"
+description = "Packed ternary (1.58-bit) matrix formats and GEMV kernels: scalar, AVX2, AVX-512 VNNI and WASM SIMD128"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+
+
+[[bench]]
+name = "gemv"
+harness = false
