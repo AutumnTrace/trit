@@ -1,0 +1,22 @@
+[workspace]
+resolver = "3"
+members = ["crates/trit-kernels"]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.89"
+license = "MIT"
+repository = "https://github.com/AutumnTrace/trit"
+
+[workspace.dependencies]
+trit-kernels = { path = "crates/trit-kernels" }
+
+[profile.release]
+codegen-units = 1
+lto = "fat"
+panic = "abort"
+
+[profile.bench]
+codegen-units = 1
+lto = "fat"
