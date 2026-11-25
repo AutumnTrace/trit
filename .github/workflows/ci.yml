@@ -28,7 +28,8 @@ jobs:
       - uses: Swatinem/rust-cache@v2
       - run: cargo fmt --all --check
       - run: cargo clippy --workspace --all-targets -- -D warnings
-      - run: cargo clippy -p trit-kernels --target wasm32-unknown-unknown -- -D warnings
+      - run: cargo clippy -p trit-kernels -p trit-model --target wasm32-unknown-unknown -- -D warnings
+      # Release mode: the parity test runs the real model.
       - run: cargo test --workspace --release
 
   python:

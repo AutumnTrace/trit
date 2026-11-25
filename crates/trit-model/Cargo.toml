@@ -1,0 +1,11 @@
+[package]
+name = "trit-model"
+description = "Load and run trit's ternary TinyStories model: tokenizer, forward pass with KV cache, sampling"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+trit-kernels.workspace = true

@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["crates/trit-kernels"]
+members = ["crates/trit-kernels", "crates/trit-model", "crates/trit-cli"]
 
 [workspace.package]
 version = "0.1.0"
@@ -11,6 +11,7 @@ repository = "https://github.com/AutumnTrace/trit"
 
 [workspace.dependencies]
 trit-kernels = { path = "crates/trit-kernels" }
+trit-model = { path = "crates/trit-model" }
 
 [profile.release]
 codegen-units = 1

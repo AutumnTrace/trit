@@ -3,5 +3,20 @@
 version = 4
 
 [[package]]
+name = "trit-cli"
+version = "0.1.0"
+dependencies = [
+ "trit-kernels",
+ "trit-model",
+]
+
+[[package]]
 name = "trit-kernels"
 version = "0.1.0"
+
+[[package]]
+name = "trit-model"
+version = "0.1.0"
+dependencies = [
+ "trit-kernels",
+]
