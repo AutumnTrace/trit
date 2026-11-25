@@ -32,7 +32,7 @@ jobs:
       - run: cargo test --workspace --release
 
   python:
-    name: Python (ruff)
+    name: Python (ruff, CPU smoke tests)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -46,3 +46,4 @@ jobs:
       - run: uv sync --locked
       - run: uv run ruff check .
       - run: uv run ruff format --check .
+      - run: uv run pytest -q
