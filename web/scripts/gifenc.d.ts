@@ -1,0 +1,20 @@
+// Minimal types for gifenc (used only by scripts/capture.ts).
+declare module 'gifenc' {
+  type Palette = number[][];
+  interface Encoder {
+    writeFrame(
+      index: Uint8Array,
+      width: number,
+      height: number,
+      opts?: { palette?: Palette; delay?: number; transparent?: boolean; transparentIndex?: number },
+    ): void;
+    finish(): void;
+    bytes(): Uint8Array;
+  }
+  const gifenc: {
+    GIFEncoder(): Encoder;
+    quantize(rgba: Uint8Array | Uint8ClampedArray, maxColors: number): Palette;
+    applyPalette(rgba: Uint8Array | Uint8ClampedArray, palette: Palette): Uint8Array;
+  };
+  export default gifenc;
+}

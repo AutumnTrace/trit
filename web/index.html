@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>trit: a 1.58-bit language model in your browser</title>
+    <meta
+      name="description"
+      content="A 15M-parameter TinyStories model whose weights are all -1, 0 or +1, running in WebAssembly from a 4.6 MB file."
+    />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 10'%3E%3Crect width='8' height='10' fill='%23f0587d'/%3E%3Crect x='11' width='8' height='10' fill='%2334384a'/%3E%3Crect x='22' width='8' height='10' fill='%233ad1c0'/%3E%3C/svg%3E"
+    />
+  </head>
+  <body>
+    <header class="top">
+      <div class="brand">
+        <span class="mark" aria-hidden="true"><i class="neg"></i><i class="zero"></i><i class="pos"></i></span>
+        <span>trit</span>
+      </div>
+      <p class="lede">
+        A 15-million-parameter language model whose weights are all <b class="neg">&minus;1</b>,
+        <b class="zero">0</b> or <b class="pos">+1</b>. It was trained on short children's stories and runs here, in
+        WebAssembly, from a <span id="file-size">4.6 MB</span> file.
+      </p>
+      <nav>
+        <a href="https://github.com/AutumnTrace/trit">Source</a>
+        <a href="https://github.com/AutumnTrace/trit/blob/main/docs/how-it-works.md">How it works</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="story" aria-labelledby="story-heading">
+        <h2 id="story-heading" class="visually-hidden">Story</h2>
+        <form id="controls" class="controls" autocomplete="off">
+          <label class="prompt">
+            <span>Start the story</span>
+            <input id="prompt" name="prompt" type="text" value="Once upon a time" maxlength="300" spellcheck="false" />
+          </label>
+          <div class="starters" id="starters" aria-label="Story starters"></div>
+          <div class="knobs">
+            <label title="0 always picks the most likely token">
+              <span>Temperature <output id="temperature-out">0.8</output></span>
+              <input id="temperature" type="range" min="0" max="1.5" step="0.05" value="0.8" />
+            </label>
+            <label title="Sample only from the most likely tokens that together reach this probability">
+              <span>Top-p <output id="top-p-out">0.90</output></span>
+              <input id="top-p" type="range" min="0.1" max="1" step="0.01" value="0.9" />
+            </label>
+            <label>
+              <span>Seed</span>
+              <span class="seed-row">
+                <input id="seed" type="number" min="0" max="4294967295" step="1" value="1" />
+                <button id="reseed" type="button" title="Pick a random seed">New</button>
+              </span>
+            </label>
+            <label>
+              <span>Speed</span>
+              <select id="pace">
+                <option value="0">As fast as it runs</option>
+                <option value="40" selected>Reading pace (40 tok/s)</option>
+              </select>
+            </label>
+          </div>
+          <div class="actions">
+            <button id="write" type="submit" class="primary" disabled>Loading&hellip;</button>
+            <button id="stop" type="button" disabled>Stop</button>
+            <label class="check"><input id="show-tokens" type="checkbox" /> Show tokens</label>
+            <label class="check"><input id="auto-seed" type="checkbox" checked /> New seed each time</label>
+            <button id="copy-link" type="button" class="link">Copy link to this story</button>
+          </div>
+        </form>
+
+        <article id="page" class="page" aria-live="polite"><span id="prompt-text"></span><span id="story-text"></span><span class="caret" aria-hidden="true"></span></article>
+
+        <div class="stats" id="stats">
+          <span><b id="stat-speed">&ndash;</b> tok/s</span>
+          <span><b id="stat-tokens">0</b> tokens</span>
+          <span>context <b id="stat-context">0</b>/<b id="stat-context-max">512</b></span>
+          <span id="stat-status">loading the model&hellip;</span>
+        </div>
+      </section>
+
+      <section class="weights" aria-labelledby="weights-heading">
+        <h2 id="weights-heading">The weights</h2>
+        <p class="note">
+          Every linear layer inside the network is a grid of trits. Pick one to see it: each pixel is a single weight,
+          <b class="neg">&minus;1</b>, <b class="zero">0</b> or <b class="pos">+1</b>. The layer multiplies its input by this
+          grid and then by one number, &gamma;.
+        </p>
+        <div class="weight-picker">
+          <label><span>Layer</span><select id="layer"></select></label>
+          <div class="segmented" id="matrix" role="radiogroup" aria-label="Matrix"></div>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="weights-canvas" width="384" height="384"></canvas>
+          <div class="hover" id="weights-hover" hidden></div>
+        </div>
+        <dl class="weight-stats" id="weight-stats"></dl>
+      </section>
+
+      <section class="facts" aria-labelledby="facts-heading">
+        <h2 id="facts-heading">The model</h2>
+        <dl id="facts"></dl>
+      </section>
+    </main>
+
+    <footer>
+      Trained on <a href="https://huggingface.co/datasets/roneneldan/TinyStories">TinyStoriesV2</a> (stories written by
+      GPT-4, CDLA-Sharing-1.0); the weights carry the same licence. Code is MIT. Stories are made up by a very small model
+      and can be odd.
+    </footer>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>
