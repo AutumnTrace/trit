@@ -144,3 +144,23 @@ whole forward pass takes about 0.4 ms, not much more than that overhead.
 - The capture script read the prompt from a `PROMPT` environment variable,
   and the first GIF began "$P$G". On Windows, `PROMPT` is the shell's prompt
   string. It is `STORY_PROMPT` now.
+
+## After v0.1.0: pruning the dead units
+
+The 396 switched-off feed-forward units looked like free savings, and they
+nearly were. The catch was the sub-norm in front of `w_down`: it divides the
+sum of squares by the layer's width, so dividing by the pruned width changes
+every remaining activation slightly. The parity test fails with that: the
+worst logit is off by 1.9% of the range against PyTorch. With the divisor kept
+at the trained width (stored in the header as before), the sum itself
+doesn't change, because adding 0.0 to a float sum leaves it exactly as it
+was. The pruned model's output is bit-identical, and a test puts dead units
+back to check exactly that.
+
+Only units with an all-zero `w_up` row qualify. In a few cases `w_down`'s
+column is zero but `w_up`'s row isn't. Those units still produce
+activations, which count in the sub-norm and the absmax, so they stay.
+
+It doesn't make generation measurably faster: `w_up` loses 3.2% of its rows,
+but `w_down` rows are padded to whole 128- or 160-column blocks, so most
+layers keep the same number of blocks there. The file is 63 KB smaller.

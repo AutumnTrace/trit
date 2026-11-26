@@ -46,8 +46,11 @@ class Reference:
         self.ffn_zeros = 0
         self.ffn_total = 0
 
-    def rmsnorm(self, x: torch.Tensor, name: str) -> torch.Tensor:
-        x = x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.cfg.norm_eps)
+    def rmsnorm(self, x: torch.Tensor, name: str, n: int | None = None) -> torch.Tensor:
+        """RMSNorm over the last axis. `n` is the count the mean divides by,
+        when pruned units (always zero) are missing from `x`."""
+        ms = x.pow(2).mean(-1, keepdim=True) if n is None else x.pow(2).sum(-1, keepdim=True) / n
+        x = x * torch.rsqrt(ms + self.cfg.norm_eps)
         return x * self.t[name]
 
     def bitlinear(self, x: torch.Tensor, name: str) -> torch.Tensor:
@@ -75,9 +78,11 @@ class Reference:
             a = (att.softmax(-1) @ v).transpose(1, 2).reshape(b, n, cfg.dim)
             x = x + self.bitlinear(self.rmsnorm(a, p + "attn_sub_norm"), p + "wo")
             u = F.relu(self.bitlinear(self.rmsnorm(x, p + "ffn_norm"), p + "w_up")).square()
-            self.ffn_zeros += (u == 0).sum().item()
-            self.ffn_total += u.numel()
-            x = x + self.bitlinear(self.rmsnorm(u, p + "ffn_sub_norm"), p + "w_down")
+            # Count over the trained width: pruned units are zeros that aren't stored.
+            pruned = (cfg.ffn_dim - u.shape[-1]) * b * n
+            self.ffn_zeros += (u == 0).sum().item() + pruned
+            self.ffn_total += u.numel() + pruned
+            x = x + self.bitlinear(self.rmsnorm(u, p + "ffn_sub_norm", cfg.ffn_dim), p + "w_down")
         x = self.rmsnorm(x, "norm")
         return x @ self.embed.T
 

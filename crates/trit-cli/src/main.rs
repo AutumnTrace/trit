@@ -149,6 +149,11 @@ fn info(a: &Args) -> Result<(), String> {
         "shape           {} layers, dim {}, {} heads, ffn {}, vocab {}, context {}",
         c.n_layers, c.dim, c.n_heads, c.ffn_dim, c.vocab_size, c.max_seq_len
     );
+    let widths: Vec<usize> = model.layers.iter().map(|l| l.w_up.w.rows()).collect();
+    if widths.iter().any(|&w| w != c.ffn_dim) {
+        let dead = c.n_layers * c.ffn_dim - widths.iter().sum::<usize>();
+        println!("ffn per layer   {widths:?} ({dead} dead units pruned)");
+    }
     println!(
         "ternary weights {ternary} ({:.2} MB at 1.6 bits)",
         ternary as f64 * 1.6 / 8e6

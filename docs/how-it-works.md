@@ -45,10 +45,10 @@ flowchart TB
 | width | 384 |
 | layers | 8 |
 | heads | 6 of 64 dimensions |
-| feed-forward | 1536, squared ReLU |
+| feed-forward | 1536, squared ReLU (1374 to 1536 stored per layer, see below) |
 | vocabulary | 4,096 byte-level BPE tokens |
 | context | 512 tokens |
-| ternary weights | 14,155,776 |
+| ternary weights | 14,155,776 trained, 13,851,648 stored |
 | embedding | 1,572,864, tied to the output |
 
 Every matrix inside a block is ternary. The embedding (which is also the
@@ -66,6 +66,14 @@ ternary model it has two practical advantages. It needs two matrices instead
 of three, so for the same parameter count the hidden layer is 1.5 times wider
 (1536 instead of 1024). And it makes the hidden activations sparse: on the
 validation set, 90.4% of them are exactly zero after the ReLU (`trit_train.reference` reports it).
+
+**Dead units.** 396 of the 12,288 hidden units ended training with an all-zero
+row of `w_up`, so they output 0 for every token. Export drops them along
+with their sub-norm weight and `w_down` column (version 2 of the
+[file format](format.md#version-2)), which removes 304,128 ternary weights.
+The sub-norm still divides by the trained width of 1536, and because adding
+0.0 to a float sum leaves it unchanged, the engine's output is bit-identical
+to the unpruned file's.
 
 ## BitLinear
 

@@ -79,11 +79,18 @@ impl Model {
         if c.n_heads == 0 || c.dim % c.n_heads != 0 || c.head_dim() % 2 != 0 {
             return Err(Error::BadTensor("config".into()));
         }
-        let (d, h) = (c.dim, c.ffn_dim);
+        let d = c.dim;
         let mut layers = Vec::with_capacity(c.n_layers);
         for i in 0..c.n_layers {
             let p = |n: &str| format!("layers.{i}.{n}");
             let lin = |n: &str, rows, cols| BitLinear::load(&f, &p(n), rows, cols, layout);
+            // This layer's feed-forward width. Version 1 files always use the
+            // full width; version 2 files may have pruned dead units.
+            let h = f.tensor(&p("w_up"))?.shape.first().copied().unwrap_or(0);
+            let full = h == c.ffn_dim;
+            if !(full || (f.version >= 2 && (1..c.ffn_dim).contains(&h))) {
+                return Err(Error::BadTensor(p("w_up")));
+            }
             layers.push(Layer {
                 attn_norm: f.f32s(&p("attn_norm"), d)?,
                 wq: lin("wq", d, d)?,
@@ -239,12 +246,16 @@ impl Model {
 
             rmsnorm(h, x, &l.ffn_norm, c.norm_eps);
             act.quantize_from(h);
+            let u = &mut u[..l.w_up.w.rows()];
             l.w_up.apply(isa, act, acc, u);
             for v in u.iter_mut() {
                 let r = v.max(0.0);
                 *v = r * r;
             }
-            rmsnorm_inplace(u, &l.ffn_sub_norm, c.norm_eps);
+            // Pruned units are zeros that aren't stored, so the mean square
+            // still divides by the trained width. Adding 0.0 to a sum changes
+            // nothing, so this is bit-identical to the unpruned layer.
+            rmsnorm_inplace(u, &l.ffn_sub_norm, c.norm_eps, c.ffn_dim);
             act.quantize_from(u);
             l.w_down.apply(isa, act, acc, q);
             for (x, &y) in x.iter_mut().zip(q.iter()) {
@@ -352,8 +363,10 @@ fn rmsnorm(out: &mut [f32], x: &[f32], w: &[f32], eps: f32) {
     }
 }
 
-fn rmsnorm_inplace(x: &mut [f32], w: &[f32], eps: f32) {
-    let ms = x.iter().map(|v| v * v).sum::<f32>() / x.len() as f32;
+/// `rmsnorm` in place, with the mean taken over `n` values: `x` plus
+/// `n - x.len()` zeros.
+fn rmsnorm_inplace(x: &mut [f32], w: &[f32], eps: f32, n: usize) {
+    let ms = x.iter().map(|v| v * v).sum::<f32>() / n as f32;
     let r = 1.0 / (ms + eps).sqrt();
     for (v, &g) in x.iter_mut().zip(w) {
         *v = *v * r * g;

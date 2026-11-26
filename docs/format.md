@@ -20,12 +20,12 @@ offset  size
 | offset | type | field |
 |---|---|---|
 | 0 | `[u8; 4]` | magic `TRIT` |
-| 4 | u32 | version, 1 |
+| 4 | u32 | version, 1 or 2 |
 | 8 | u32 | vocabulary size |
 | 12 | u32 | model width `dim` |
 | 16 | u32 | layers |
 | 20 | u32 | attention heads |
-| 24 | u32 | feed-forward width |
+| 24 | u32 | feed-forward width as trained (see [version 2](#version-2)) |
 | 28 | u32 | context length |
 | 32 | u32 | reserved (0) |
 | 36 | u32 | reserved (0) |
@@ -90,3 +90,20 @@ repacks it into one of the kernel layouts described in
 | `norm` | f32 | dim |
 
 The embedding doubles as the output layer (the weights are tied).
+
+## Version 2
+
+Version 2 lets each layer have its own feed-forward width `ffn_i`, at most
+the header's `ffn`: `w_up` is `ffn_i x dim`, `ffn_sub_norm` has `ffn_i`
+entries and `w_down` is `dim x ffn_i`. The width is read from `w_up`'s
+shape; nothing else in the layout changes.
+
+Export uses it to drop feed-forward units whose row of `w_up` is all zero.
+Such a unit's output is relu(0)² = 0 for every input, so it adds nothing to
+`w_down`'s result and nothing to the activation absmax. It does count in the
+sub-norm's mean square, as a zero, so readers keep dividing that mean by the
+header's trained `ffn`, not by `ffn_i`. With that one rule a pruned file
+computes exactly what the unpruned one did.
+
+The writer emits version 1 when no layer is pruned, so such files still load
+in older readers. Version 1 readers refuse version 2 files.

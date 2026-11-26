@@ -4,7 +4,10 @@
 use std::fmt;
 
 pub const MAGIC: &[u8; 4] = b"TRIT";
-pub const VERSION: u32 = 1;
+/// Newest version this parser reads. Version 2 allows a layer's feed-forward
+/// width (the rows of `w_up`) to be smaller than `ffn_dim`, after export
+/// pruned units that always output zero; `ffn_dim` stays the trained width.
+pub const VERSION: u32 = 2;
 
 #[derive(Debug, Clone, PartialEq)]
 pub enum Error {
@@ -65,6 +68,7 @@ pub struct TensorInfo<'a> {
 }
 
 pub struct File<'a> {
+    pub version: u32,
     pub config: Config,
     pub tokens: Vec<&'a [u8]>,
     pub merges: Vec<(u16, u16, u16)>,
@@ -111,7 +115,7 @@ impl<'a> File<'a> {
             return Err(Error::BadMagic);
         }
         let version = r.u32("header")?;
-        if version != VERSION {
+        if !(1..=VERSION).contains(&version) {
             return Err(Error::UnsupportedVersion(version));
         }
         let mut u = || r.u32("header").map(|v| v as usize);
@@ -165,6 +169,7 @@ impl<'a> File<'a> {
             });
         }
         Ok(File {
+            version,
             config: Config {
                 vocab_size,
                 dim,
