@@ -1,6 +1,6 @@
 {
   "name": "trit-web",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "A 1.58-bit TinyStories model running in the browser on WebAssembly SIMD.",
   "license": "MIT",
