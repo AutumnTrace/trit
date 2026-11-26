@@ -40,7 +40,7 @@ Both models have the same shape and saw the same 327.7M training tokens (20,000 
 | validation loss | **1.341** | **1.228** |
 | perplexity | 3.82 | 3.42 |
 | weights inside the blocks | 14.2M trits, 2.83 MB at 1.6 bits | 14.2M floats, 28.3 MB in bf16 |
-| whole model file | 4.57 MB | 31.5 MB in bf16 (not exported) |
+| whole model file | 4.50 MB | 31.5 MB in bf16 (not exported) |
 | peak learning rate | 2e-3 | 1e-3 |
 | training time on the RTX 5070 | 51 min (106k tokens/s) | 27 min (206k tokens/s) |
 
@@ -129,6 +129,8 @@ The dark stripes in the picture are feed-forward units that training switched of
 | layer | 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 |
 |---|---|---|---|---|---|---|---|---|
 | dead units | 0 | 34 | 98 | 162 | 80 | 21 | 1 | 0 |
+
+Export drops them. That removes 304,128 ternary weights (2.1% of them) and takes the file from 4.57 MB to 4.50 MB. Stories for a given seed stay identical, as do validation loss (1.3411) and the share of zero activations below. The format's [version 2](docs/format.md#version-2) explains why removing them is exact. The screenshot above was taken before pruning. The live viewer shows the matrices as stored, and says how many dead units each one lost.
 
 The living ones are sparse too: after the ReLU² about 90% of hidden activations are exactly zero on the validation set.
 
@@ -230,7 +232,7 @@ docs/                  how it works, file format, devlog
 - [ ] A NEON kernel, and a lookup-table kernel for CPUs without fast int8 dot products.
 - [ ] WebAssembly relaxed-SIMD dot products where the browser has them.
 - [ ] Train wider and deeper models to find where the ternary gap closes, as the BitNet papers report it does at scale.
-- [ ] Prune the dead feed-forward units at export (3.2% of the feed-forward weights, for free).
+- [x] Prune the dead feed-forward units at export (3.2% of the feed-forward weights, for free).
 
 ## Credits and licence
 

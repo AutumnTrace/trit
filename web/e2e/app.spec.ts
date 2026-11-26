@@ -64,7 +64,9 @@ test('draws every weight matrix as trits', async ({ page }) => {
     await expect(page.locator('#weight-stats')).toContainText(`layers.2.`);
   }
   const size = await page.locator('#weights-canvas').evaluate((c: HTMLCanvasElement) => [c.width, c.height]);
-  expect(size).toEqual([1536, 384]); // w_down is 384 x 1536, drawn as is
+  // w_down is 384 x 1438, drawn as is: export dropped layer 2's 98 dead units.
+  expect(size).toEqual([1438, 384]);
+  await expect(page.locator('#weight-stats')).toContainText('98 dead units dropped at export');
   const share = await page.locator('#weight-stats').textContent();
   expect(share).toMatch(/−1 [\d.]+%.*0 [\d.]+%.*\+1 [\d.]+%/s);
 });

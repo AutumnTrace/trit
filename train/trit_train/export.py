@@ -4,6 +4,11 @@ BitLinear weights become trits plus their absmean scale, exactly as the
 training forward pass saw them. The tied embedding is quantized after
 training to int8 with one absmax scale per row; `reference.py` measures
 what that costs.
+
+Feed-forward units whose row of `w_up` is all zero are dropped: they always
+output relu(0)^2 = 0, so removing them, their sub-norm weight and their
+column of `w_down` changes no output (the sub-norm keeps averaging over the
+trained width). `--prune` applies the same step to an existing file.
 """
 
 from __future__ import annotations
@@ -65,6 +70,31 @@ def build(model: Transformer, tok: Tokenizer) -> ff.TritFile:
     return f
 
 
+def prune_dead_units(f: ff.TritFile) -> list[int]:
+    """Drop feed-forward units whose `w_up` row is all zero, in place.
+
+    Returns how many units each layer lost. Only the `w_up` row decides: a
+    unit with a zero `w_down` column but a live `w_up` row still adds to the
+    sub-norm's mean square and to the activation absmax, so it has to stay.
+    """
+    removed = []
+    for i in range(f.n_layers):
+        up, sub, down = (f.tensors[f"layers.{i}.{n}"] for n in ("w_up", "ffn_sub_norm", "w_down"))
+        live = np.flatnonzero(np.any(np.asarray(up.data) != 0, axis=1))
+        removed.append(up.shape[0] - live.size)
+        if live.size == up.shape[0]:
+            continue
+        if live.size == 0:
+            raise ValueError(f"layer {i} has no live feed-forward units")
+        up.data = np.ascontiguousarray(np.asarray(up.data)[live])
+        up.shape = tuple(up.data.shape)
+        sub.data = np.ascontiguousarray(np.asarray(sub.data)[live])
+        sub.shape = tuple(sub.data.shape)
+        down.data = np.ascontiguousarray(np.asarray(down.data)[:, live])
+        down.shape = tuple(down.data.shape)
+    return removed
+
+
 def load_checkpoint(path: Path) -> Transformer:
     ck = torch.load(path, map_location="cpu", weights_only=True)
     model = Transformer(Config(**ck["config"]))
@@ -77,13 +107,21 @@ def main() -> None:
     p.add_argument("--checkpoint", type=Path, default=Path("runs/ternary/model.pt"))
     p.add_argument("--tokenizer", type=Path, default=Path("out/tokenizer.json"))
     p.add_argument("--out", type=Path, default=Path("out/tinystories-15m.trit"))
+    p.add_argument("--keep-dead", action="store_true", help="keep units that always output zero")
+    p.add_argument("--prune", type=Path, metavar="TRIT", help="prune this .trit file instead")
     args = p.parse_args()
-    model = load_checkpoint(args.checkpoint)
-    f = build(model, Tokenizer.from_file(str(args.tokenizer)))
+    if args.prune:
+        f = ff.read(args.prune)
+    else:
+        model = load_checkpoint(args.checkpoint)
+        f = build(model, Tokenizer.from_file(str(args.tokenizer)))
+    if not args.keep_dead:
+        removed = prune_dead_units(f)
+        print(f"pruned {sum(removed):,} dead feed-forward units, per layer {removed}")
     args.out.parent.mkdir(parents=True, exist_ok=True)
     n = ff.write(args.out, f)
     trits = sum(t.data.size for t in f.tensors.values() if t.dtype == ff.DT_TERNARY)
-    print(f"wrote {args.out}: {n:,} bytes, {trits:,} ternary weights")
+    print(f"wrote {args.out}: {n:,} bytes, {trits:,} ternary weights, version {ff.version_for(f)}")
 
 
 if __name__ == "__main__":

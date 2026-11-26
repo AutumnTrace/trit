@@ -9,7 +9,7 @@ from tokenizers import Tokenizer, trainers
 from tokenizers import pre_tokenizers as pt
 
 from trit_train import fileformat as ff
-from trit_train.export import build, quantize_embedding
+from trit_train.export import build, prune_dead_units, quantize_embedding
 from trit_train.model import BitLinear, Config, Transformer, activation_quant, weight_quant
 from trit_train.reference import Reference
 from trit_train.tokenizer import EOS, build_empty, merges, token_bytes
@@ -117,3 +117,39 @@ def test_export_roundtrip_and_reference_parity(tok, tmp_path):
         want = model(idx)
     got = Reference(g).forward(idx)
     assert torch.allclose(got, want, atol=1e-4, rtol=1e-4), (got - want).abs().max()
+
+
+def test_pruning_dead_units_changes_no_output(tok, tmp_path):
+    torch.manual_seed(2)
+    model = Transformer(TINY).eval()
+    f = build(model, tok)
+    # Switch some units off the way training does: a whole w_up row of zeros.
+    # Unit 9 of layer 0 also keeps a live w_down column, which must not matter.
+    dead = {0: [3, 9, 100], 1: [0, 127]}
+    for layer, units in dead.items():
+        f.tensors[f"layers.{layer}.w_up"].data[units] = 0
+    full = tmp_path / "full.trit"
+    ff.write(full, f)
+    assert ff.version_for(f) == 1
+
+    assert prune_dead_units(f) == [3, 2]
+    pruned = tmp_path / "pruned.trit"
+    ff.write(pruned, f)
+    g = ff.read(pruned)
+    assert ff.version_for(g) == 2 and g.ffn_dim == TINY.ffn_dim
+    assert ff.ffn_widths(g) == [125, 126]
+    assert g.tensors["layers.0.w_down"].shape == (TINY.dim, 125)
+    assert g.tensors["layers.1.ffn_sub_norm"].shape == (126,)
+    assert full.stat().st_size > pruned.stat().st_size
+    # The header says version 2, so a v1-only reader refuses the file.
+    assert int.from_bytes(pruned.read_bytes()[4:8], "little") == 2
+
+    idx = torch.randint(0, TINY.vocab_size, (2, 24))
+    ref_full, ref_pruned = Reference(ff.read(full)), Reference(g)
+    want, got = ref_full.forward(idx), ref_pruned.forward(idx)
+    assert torch.allclose(got, want, atol=1e-5, rtol=1e-5), (got - want).abs().max()
+    # The zero share is still counted over the trained width.
+    # (Equal up to float summation order in the sub-norm, which may round differently.)
+    assert ref_pruned.ffn_total == ref_full.ffn_total
+    assert abs(ref_pruned.ffn_zeros - ref_full.ffn_zeros) <= ref_full.ffn_total // 1000
+    assert prune_dead_units(g) == [0, 0], "pruning twice finds nothing new"

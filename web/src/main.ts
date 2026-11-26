@@ -179,8 +179,14 @@ function onMatrix(m: Extract<FromWorker, { type: 'matrix' }>): void {
   const n = m.rows * m.cols;
   const pct = (k: number) => `${((100 * k) / n).toFixed(1)}%`;
   const name = MATRICES[m.which];
+  // Export drops feed-forward units that training switched off (an all-zero
+  // w_up row), so these two matrices can be narrower than the trained width.
+  const width = name === 'w_up' ? m.rows : name === 'w_down' ? m.cols : null;
+  const dropped = info && width !== null && width < info.ffn ? info.ffn - width : 0;
   $('weight-stats').innerHTML = `
-    <dt>matrix</dt><dd>layers.${m.layer}.${name}: ${m.rows} × ${m.cols}${transposed ? ' (drawn rotated)' : ''}</dd>
+    <dt>matrix</dt><dd>layers.${m.layer}.${name}: ${m.rows} × ${m.cols}${transposed ? ' (drawn rotated)' : ''}${
+      dropped ? `, ${dropped} dead units dropped at export` : ''
+    }</dd>
     <dt>scale &gamma;</dt><dd>${m.gamma.toPrecision(4)}</dd>
     <dt>share</dt><dd>
       <span style="color:var(--neg)">−1 ${pct(counts[0])}</span> ·

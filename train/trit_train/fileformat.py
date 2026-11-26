@@ -2,6 +2,11 @@
 
 Everything is little-endian. A 64-byte header, the tokenizer, a tensor table,
 then tensor data, each tensor starting on a 64-byte boundary.
+
+Version 2 lets a layer's feed-forward width (the rows of `w_up`) be smaller
+than the header's `ffn_dim`, after pruning units that can only output zero.
+The header keeps the trained width, which the feed-forward sub-norm still
+averages over. The writer uses version 1 whenever no layer is pruned.
 """
 
 from __future__ import annotations
@@ -12,7 +17,7 @@ from dataclasses import dataclass, field
 import numpy as np
 
 MAGIC = b"TRIT"
-VERSION = 1
+VERSIONS = (1, 2)  # 2 adds per-layer feed-forward widths
 ALIGN = 64
 
 DT_F32, DT_I8, DT_TERNARY = 0, 1, 2
@@ -64,11 +69,20 @@ def unpack_base3(packed: np.ndarray, cols: int) -> np.ndarray:
     return (d[:, :cols] - 1).astype(np.int8)
 
 
+def ffn_widths(f: TritFile) -> list[int]:
+    """Feed-forward width of each layer: the rows of its `w_up`."""
+    return [f.tensors[f"layers.{i}.w_up"].shape[0] for i in range(f.n_layers)]
+
+
+def version_for(f: TritFile) -> int:
+    return 1 if all(w == f.ffn_dim for w in ffn_widths(f)) else 2
+
+
 def _header(f: TritFile, n_tensors: int) -> bytes:
     return struct.pack(
         "<4s9I2f3I",
         MAGIC,
-        VERSION,
+        version_for(f),
         f.vocab_size,
         f.dim,
         f.n_layers,
@@ -151,8 +165,8 @@ def read(path) -> TritFile:
         n_merges,
         n_tensors,
     ) = struct.unpack_from("<4s9I2f3I", buf, 0)
-    if magic != MAGIC or version != VERSION:
-        raise ValueError(f"not a trit v{VERSION} file")
+    if magic != MAGIC or version not in VERSIONS:
+        raise ValueError(f"not a trit file of version {', '.join(map(str, VERSIONS))}")
     pos = ALIGN
     tokens = []
     for _ in range(vocab):
